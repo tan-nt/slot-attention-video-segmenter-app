@@ -75,29 +75,3 @@ The released MOVi datasets as part of [Kubric](https://github.com/google-researc
 
 All results are in terms of **FG-ARI** (in %) on validation splits. Mean ± standard error over 5 seeds. All SAVi and SAVi++ models reported above use bounding boxes of the first video frame as conditioning signal. For simplicity, we evaluate FG-ARI on all frames of the video (incl. the first frame), which differs from the setup described in our ICLR 2022 paper.
 
-## Cite
-
-```
-@inproceedings{kipf2022conditional,
-    author = {Kipf, Thomas and Elsayed, Gamaleldin F. and Mahendran, Aravindh
-              and Stone, Austin and Sabour, Sara and Heigold, Georg
-              and Jonschkowski, Rico and Dosovitskiy, Alexey and Greff, Klaus},
-    title = {{Conditional Object-Centric Learning from Video}},
-    booktitle = {International Conference on Learning Representations (ICLR)},
-    year  = {2022}
-}
-```
-
-```
-@inproceedings{elsayed2022savi++,
-    author={Elsayed, Gamaleldin F. and Mahendran, Aravindh
-    and van Steenkiste, Sjoerd and Greff, Klaus and Mozer, Michael C.
-    and Kipf, Thomas},
-    title = {{SAVi++: Towards end-to-end object-centric learning from real-world videos}},
-    booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
-    year  = {2022}
-}
-```
-
-## Disclaimer
-This is not an official Google product.
