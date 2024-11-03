@@ -4,13 +4,6 @@ This repository contains the streamlit application of "Guided Slot Attention for
 
 <img src="savi.gif" alt="SAVi animation" width="400"/>
 
-<br />
-
-<img src="savi++_1.gif" alt="SAVi++ animation 1" width="400"/>
-
-<img src="savi++_2.gif" alt="SAVi++ animation 2" width="400"/>
-
-
 ## Instructions
 > ℹ️ The following instructions assume that you are using JAX on GPUs and have CUDA and CuDNN installed. For more details on how to use JAX with accelerators, including requirements and TPUs, please read the [JAX installation instructions](https://github.com/google/jax#installation).
 
