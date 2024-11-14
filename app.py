@@ -51,7 +51,8 @@ def visual(image, image_name, work_dir="log/2024-11-14 12:52:12-davis-2017"):
 
     # Load checkpoint
     model_dir = os.path.join(work_dir, "model")
-    checkpoint = torch.load(model_dir + "/best_model.pth", map_location=device)
+    # checkpoint = torch.load(model_dir + "/best_model.pth", map_location=device)
+    checkpoint = torch.load(model_dir + "/best_model.pth", map_location=device, weights_only=True)
     model.load_state_dict(checkpoint['model_state_dict'])
 
     # Preprocess the uploaded image for the model
