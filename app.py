@@ -9,6 +9,7 @@ import cv2
 import torchvision.transforms as transforms
 import config as config
 from PIL import Image
+import tempfile
 
 import torch
 from model.model_for_pretrain import GSANet
@@ -81,6 +82,80 @@ def visual_from_streamlit(device, model, images):
             results.append((image_name, result))
     
     return results
+
+def process_frame(device, model, frame):
+    # Define transformation pipeline
+    transform = transforms.Compose([
+        transforms.Resize((config.TRAIN['img_size'], config.TRAIN['img_size'])),  # Resize to model input size
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+
+    # Convert the frame to PIL and apply transformations
+    img_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    img_tensor = transform(img_pil).unsqueeze(0).to(device)  # Add batch dimension
+
+    # Run the model prediction
+    with torch.no_grad():
+        pred, _ = model(img_tensor)
+        res = pred[0]  # Assume the prediction output is compatible
+
+    # Process the prediction result to match original image size and format
+    res = res.squeeze().cpu().numpy()  # Remove unnecessary dimensions
+    res = (res - res.min()) / (res.max() - res.min() + 1e-8)  # Normalize to [0, 1]
+    res_img = cv2.cvtColor((res * 255).astype(np.uint8), cv2.COLOR_GRAY2BGR)  # Convert to BGR for display
+
+    # Resize original frame and prediction to original frame size if needed
+    ori_image = np.array(img_pil.resize((res_img.shape[1], res_img.shape[0])))  # Resize back if necessary
+    ori_image = cv2.cvtColor(ori_image, cv2.COLOR_RGB2BGR)
+
+    # Concatenate original and result for side-by-side comparison
+    result_frame = cv2.hconcat([ori_image, res_img])
+
+    return result_frame
+
+# Process video and save each frame as an image
+def process_video_to_images(temp_file_path, model, output_folder, frame_rate=20):
+    cap = cv2.VideoCapture(temp_file_path)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+    frame_count = 0
+    saved_images = []
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # Process frames at intervals defined by frame_rate
+        if frame_count % frame_rate == 0:
+            processed_frame = process_frame(device, model, frame)
+            image_path = os.path.join(output_folder, f"frame_{frame_count}.jpg")
+            cv2.imwrite(image_path, processed_frame)
+            saved_images.append(image_path)
+
+        frame_count += 1
+
+    cap.release()
+    return saved_images
+
+
+# Merge images into a video
+def merge_images_to_video(image_paths, output_path, duration=0.5):
+    img1 = cv2.imread(image_paths[0])
+    height, width, _ = img1.shape
+    frame_size = (width, height)
+
+    # Create a video writer object
+    fourcc = cv2.VideoWriter_fourcc(*'avc1')
+    video_writer = cv2.VideoWriter(output_path, fourcc, 1, frame_size)
+
+    for image_path in image_paths:
+        img = cv2.imread(image_path)
+        for _ in range(duration):
+            video_writer.write(img)
+
+    video_writer.release()
 
 # Page Content Based on Sidebar Selection
 if selected == "📹 Introduction":
@@ -202,13 +277,71 @@ elif selected == "🛠️ Try It Out":
             st.write(f"Image Name: {image_name}")
             st.image(result, caption="RGB Converted and Predicted Images", use_container_width=True)
 
-    video_file = st.file_uploader("Upload a video", type=["mp4", "mov", "avi"])
-    frame_rate = st.slider("Select Frame Rate for Segmentation", min_value=1, max_value=30, value=10)
+        st.title("Video Segmentation with Frame Processing")
+
+    # Upload video file and select frame rate
+    video_file = st.file_uploader("Upload a video (Dataset exaple: https://grail.cs.washington.edu/projects/background-matting-v2/#/datasets)", type=["mp4", "mov", "avi"])
+    frame_rate = st.slider("Select Frame Rate for Segmentation", min_value=20, max_value=100, value=50)
+    
+    # Use a persistent file location
     if video_file:
         st.write("Processing your video with the selected frame rate...")
-        # Placeholder for segmentation process
-        st.video(video_file)
 
+        # Save the uploaded video to a persistent file location
+        temp_file_path = "uploaded_video.mp4"
+        with open(temp_file_path, "wb") as f:
+            f.write(video_file.read())
+
+        # Set up model
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = GSANet()  # Initialize your model here
+        model = torch.nn.DataParallel(model)
+        model.to(device)
+
+        # Load model weights
+        work_dir = "log/2024-11-14 12:52:12-davis-2017"
+        model_dir = os.path.join(work_dir, "model")
+        checkpoint = torch.load(model_dir + "/best_model.pth", map_location=device)
+        model.load_state_dict(checkpoint['model_state_dict'])
+
+        # Process the video and save each processed frame as an image
+        cap = cv2.VideoCapture(temp_file_path)
+        output_folder = "processed_frames"
+        os.makedirs(output_folder, exist_ok=True)
+        saved_images = []
+
+        frame_count = 0
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            # Process frames at intervals defined by frame_rate
+            if frame_count % frame_rate == 0:
+                processed_frame = process_frame(device, model, frame)
+                image_path = os.path.join(output_folder, f"frame_{frame_count}.jpg")
+                cv2.imwrite(image_path, processed_frame)
+                saved_images.append(image_path)
+
+            frame_count += 1
+
+        cap.release()
+
+        # Merge saved images into a final video
+        output_video_path = "processed_video_output.mp4"
+        merge_images_to_video(saved_images, output_video_path, duration=2)
+
+        # Optionally delete the saved images after merging
+        for image_path in saved_images:
+            os.remove(image_path)
+
+        # Display message to confirm saving
+        st.write(f"Video processing complete. Saved as: {output_video_path}")
+
+        # Display the processed video in Streamlit
+        with open(output_video_path, 'rb') as video_file:
+            st.video(video_file.read())
+    
 elif selected == "📊 Real-Life Applications":
     st.title("Real-Life Applications of Guided Slot Attention")
     st.write("""
