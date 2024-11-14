@@ -171,6 +171,7 @@ def load_model():
 
 # Function to process image and remove background
 
+
 # Function to process image and remove background with improved blending
 def segment_and_replace_background(model, device, image, new_background):
     # Define transformations
@@ -192,9 +193,15 @@ def segment_and_replace_background(model, device, image, new_background):
     mask = (mask - mask.min()) / (mask.max() - mask.min())
     binary_mask = (mask > 0.5).astype(np.uint8) * 255  # Threshold and scale to 255
     
-    # Resize binary mask and apply Gaussian blur for smoother edges
+    # Resize binary mask to match the original image size
     binary_mask_resized = cv2.resize(binary_mask, image.size, interpolation=cv2.INTER_LINEAR)
-    blurred_mask = cv2.GaussianBlur(binary_mask_resized, (15, 15), 0)
+
+    # Apply a larger Gaussian blur or a bilateral filter for smoother edges
+    blurred_mask = cv2.GaussianBlur(binary_mask_resized, (25, 25), 0)  # Larger kernel for softer edges
+    # Alternatively, use a bilateral filter to retain object edges better
+    # blurred_mask = cv2.bilateralFilter(binary_mask_resized, d=15, sigmaColor=75, sigmaSpace=75)
+
+    # Create a smooth alpha mask from the blurred mask
     mask_float = blurred_mask / 255.0  # Convert to [0,1] range for blending
 
     # Convert the original image to numpy and prepare the new background
@@ -202,13 +209,13 @@ def segment_and_replace_background(model, device, image, new_background):
     new_background = new_background.resize(image.size)
     new_background_np = np.array(new_background)
 
-    # Blend the foreground with the new background using the mask
-    foreground = image_np * mask_float[..., None]  # Keep original colors of the foreground
-    background = new_background_np * (1 - mask_float[..., None])  # Apply inverted mask to background
+    # Apply smooth alpha blending to combine foreground and background
+    foreground = (image_np * mask_float[..., None]).astype(np.uint8)  # Keep original colors of the foreground
+    background = (new_background_np * (1 - mask_float[..., None])).astype(np.uint8)  # Apply inverted mask to background
 
-    # Combine foreground and background
-    combined_image = foreground + background
-    return Image.fromarray(combined_image.astype(np.uint8))
+    # Combine foreground and background with smooth blending
+    combined_image = cv2.addWeighted(foreground, 1, background, 1, 0)
+    return Image.fromarray(combined_image)
 
 # Page Content Based on Sidebar Selection
 if selected == "📹 Introduction":
