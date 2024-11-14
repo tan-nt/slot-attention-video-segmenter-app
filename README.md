@@ -26,8 +26,33 @@ This project presents an implementation of Guided Slot Attention for Unsupervise
     <img width="70%" alt="Segmentation Result 2" src="./assets/colab_run/davis-2017-result-2.png">
 </p>
 
-### Streamlit App
-- **Interactive Visualization**: The Streamlit app enables users to visualize segmentation results interactively, providing an intuitive way to explore the model's performance on video sequences.
+### Streamlit App for Image and Video Segmentation
+
+Welcome to our interactive **Image and Video Segmentation** app, built with Streamlit. This application leverages Guided Slot Attention for background removal, image segmentation, and video segmentation, offering an intuitive, user-friendly interface to explore advanced segmentation techniques.
+
+#### 🚀 Features
+
+##### Interactive Visualization
+The app allows users to visualize segmentation results interactively, providing an intuitive way to explore the model's performance on both images and video sequences.
+
+##### Capabilities
+- **Image Segmentation**: Upload any image, and the app will segment and separate the foreground, allowing for custom background replacements.
+- **Video Segmentation**: Process video frames in real-time to identify and segment objects across the sequence.
+- **Background Removal with Custom Backgrounds**: Easily remove the background from images and replace it with a custom background, ideal for content creators and marketing materials.
+
+##### User Interface Preview
+
+<p align="center">
+    <img width="70%" alt="Streamlit demo app 1" src="./assets/streamlit_demo/demo1.png">
+    <img width="70%" alt="Streamlit demo app 2" src="./assets/streamlit_demo/demo2.png">
+    <img width="70%" alt="Streamlit demo app 3" src="./assets/streamlit_demo/demo3.png">
+    <img width="70%" alt="Streamlit demo app 4" src="./assets/streamlit_demo/demo4.png">
+    <img width="70%" alt="Streamlit demo app 5" src="./assets/streamlit_demo/demo5.png">
+    <img width="70%" alt="Streamlit demo app 6" src="./assets/streamlit_demo/demo6.png">
+    <img width="70%" alt="Streamlit demo app 7" src="./assets/streamlit_demo/demo7.png">
+    <img width="70%" alt="Streamlit demo app 8" src="./assets/streamlit_demo/demo8.png">
+    <img width="70%" alt="Streamlit demo app 9" src="./assets/streamlit_demo/demo9.png">
+</p>
 
 ### Real-Life Applications
 The approach discussed in this project has several promising real-life applications, such as:
