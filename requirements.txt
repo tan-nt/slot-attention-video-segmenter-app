@@ -6,4 +6,4 @@ streamlit-option-menu
 torch
 torchvision
 transformers
-opencv-python
+opencv-python-headless
