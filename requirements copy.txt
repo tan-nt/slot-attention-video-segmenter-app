@@ -1,7 +1,0 @@
-numpy
-opencv-python
-Pillow
-torch
-torchvision
-transformers
-pytz
