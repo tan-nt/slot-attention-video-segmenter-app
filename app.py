@@ -57,6 +57,8 @@ def visual_from_streamlit(device, model, images):
     results = []
     with torch.no_grad():
         for image in images:
+            image_name = image.name
+            
             # Load and preprocess the image
             img_pil = Image.open(image).convert("RGB")
             img_tensor = transform(img_pil).unsqueeze(0).to(device)
@@ -76,7 +78,7 @@ def visual_from_streamlit(device, model, images):
             
             # Concatenate original and prediction for comparison
             result = cv2.hconcat([ori_image, res_img])
-            results.append(result)
+            results.append((image_name, result))
     
     return results
 
@@ -196,7 +198,8 @@ elif selected == "🛠️ Try It Out":
         results = visual_from_streamlit(device, model, uploaded_images)
         
         # Display each result image
-        for result in results:
+        for image_name, result in results:
+            st.write(f"Image Name: {image_name}")
             st.image(result, caption="RGB Converted and Predicted Images", use_container_width=True)
 
     video_file = st.file_uploader("Upload a video", type=["mp4", "mov", "avi"])
