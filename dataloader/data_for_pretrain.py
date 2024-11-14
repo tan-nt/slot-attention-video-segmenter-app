@@ -249,7 +249,6 @@ class SalObjDataset_test(data.Dataset):
         return self.size
 
 def get_testloader(shuffle=False, num_workers=12, pin_memory=False):
-
     dataset = SalObjDataset_test()
     data_loader = data.DataLoader(dataset=dataset,
                                   batch_size=config.TRAIN['batch_size'],
