@@ -12,7 +12,7 @@
 ## What do we offer?
 ### Guided Slot Attention for Unsupervised Video Object Segmentation
 
-This project presents an implementation of Guided Slot Attention for Unsupervised Video Object Segmentation, with an emphasis on the DAVIS 2017 dataset. The project offers an interactive Google Colab notebook for training and experimentation, along with a Streamlit app for visualizations and practical applications.
+This project presents an implementation of Guided Slot Attention for Unsupervised Video Object Segmentation, with an emphasis on the DAVIS 2017 dataset. The project offers an interactive Google Colab notebook for training and experimentation, along with a Streamlit app for visualizations and practical applications (We only use 5 epoches for training, so the result is not too effective)
 
 ### Google Colab Notebook
 - **Train and Experiment on DAVIS 2017 Dataset**: The Colab notebook allows you to train and experiment with Guided Slot Attention on the DAVIS 2017 dataset, which you can find more information about [here](https://davischallenge.org/davis2017/code.html).
