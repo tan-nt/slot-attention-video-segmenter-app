@@ -156,6 +156,59 @@ def merge_images_to_video(image_paths, output_path, duration=0.5):
             video_writer.write(img)
 
     video_writer.release()
+    
+
+# Load model function (you can adjust this based on your actual model setup)
+def load_model():
+    model = GSANet()  # Replace with actual model class
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = torch.nn.DataParallel(model).to(device)
+    # Load model weights
+    checkpoint = torch.load("log/2024-11-14 12:52:12-davis-2017/model/best_model.pth", map_location=device)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    model.eval()
+    return model, device
+
+# Function to process image and remove background
+
+# Function to process image and remove background with improved blending
+def segment_and_replace_background(model, device, image, new_background):
+    # Define transformations
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),  # Adjust as per model requirements
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+
+    # Prepare the input image
+    image_tensor = transform(image).unsqueeze(0).to(device)
+    
+    # Run the model
+    with torch.no_grad():
+        pred, _ = model(image_tensor)
+        mask = pred[0].squeeze().cpu().numpy()  # Extract segmentation mask
+
+    # Normalize and convert the mask to binary with smoother edges
+    mask = (mask - mask.min()) / (mask.max() - mask.min())
+    binary_mask = (mask > 0.5).astype(np.uint8) * 255  # Threshold and scale to 255
+    
+    # Resize binary mask and apply Gaussian blur for smoother edges
+    binary_mask_resized = cv2.resize(binary_mask, image.size, interpolation=cv2.INTER_LINEAR)
+    blurred_mask = cv2.GaussianBlur(binary_mask_resized, (15, 15), 0)
+    mask_float = blurred_mask / 255.0  # Convert to [0,1] range for blending
+
+    # Convert the original image to numpy and prepare the new background
+    image_np = np.array(image)
+    new_background = new_background.resize(image.size)
+    new_background_np = np.array(new_background)
+
+    # Blend the foreground with the new background using the mask
+    foreground = image_np * mask_float[..., None]  # Keep original colors of the foreground
+    background = new_background_np * (1 - mask_float[..., None])  # Apply inverted mask to background
+
+    # Combine foreground and background
+    combined_image = foreground + background
+    return Image.fromarray(combined_image.astype(np.uint8))
 
 # Page Content Based on Sidebar Selection
 if selected == "📹 Introduction":
@@ -350,6 +403,50 @@ elif selected == "📊 Real-Life Applications":
     - **Surveillance Systems**: Enhances tracking and event detection.
     - **Medical Imaging**: Helps in tracking cells or anatomical structures across frames.
     """)
+        
+        
+    # Streamlit Interface
+    st.title("Real-life demo: Image Background Replacement with Guided Slot Attention Segmentation")
+
+    # Image uploader
+    uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+
+    # Default background images
+    default_backgrounds = {
+        "Sunset": "assets/background/sunset.jpg",
+        "Mountain": "assets/background/mountain.jpeg",
+        "Sea": "assets/background/sea.jpg",
+        "City": "assets/background/city.jpg"
+    }
+
+    # Select a default background or upload your own
+    st.write("Choose a background:")
+    background_choice = st.selectbox("Select a default background or upload your own:", ["Upload your own"] + list(default_backgrounds.keys()))
+    new_background_image = None
+
+    if background_choice == "Upload your own":
+        # Handle user-uploaded background image
+        new_background_image_file = st.file_uploader("Upload a background image", type=["jpg", "jpeg", "png"])
+        if new_background_image_file is not None:
+            # Open the uploaded image directly from the file uploader
+            new_background_image = Image.open(new_background_image_file).convert("RGB")
+    else:
+        # Load the selected default background image using the file path
+        new_background_image = Image.open(default_backgrounds[background_choice]).convert("RGB")
+
+    if uploaded_image and new_background_image:
+        # Display original image
+        st.image(uploaded_image, caption="Original Image", use_column_width=True)
+
+        # Load the uploaded image as a PIL Image object
+        input_image = Image.open(uploaded_image).convert("RGB")
+
+        # Load the model and setup device
+        model, device = load_model()  # Assume load_model() is defined elsewhere
+
+        # Process and display the result using the selected background
+        result_image = segment_and_replace_background(model, device, input_image, new_background_image)
+        st.image(result_image, caption="Image with New Background", use_column_width=True)
 
 elif selected == "📜 FAQs":
     st.title("FAQs")
