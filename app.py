@@ -2,6 +2,7 @@ import streamlit as st
 import logging
 from streamlit_option_menu import option_menu
 from PIL import Image
+import os
 
 # Configure Streamlit page
 st.set_page_config(
@@ -67,10 +68,63 @@ if selected == "📹 Introduction":
     st.image(gif_path, caption="Segmentation in Action", use_container_width=True)
     
     # Sample Segmentation Images
-    st.header("Training Segmentation Results on Davis 2017")
+    st.header(" Segmentation training model metrics on Davis 2017")
     image1 = Image.open("assets/colab_run/davis-2017-result-1.png")
     image2 = Image.open("assets/colab_run/davis-2017-result-2.png")
     st.image([image1, image2], caption=["Result 1", "Result 2"])
+    
+    #  Segmentation Results on Davis 2017
+    st.header("Segmentation Sample Results on Davis 2017")
+    # Root directory where the folders are located
+    root_dir = "log/2024-11-14 12:52:12-davis-2017/result/total"  # Replace with the path to the root directory
+
+    # Loop through each folder in the root directory
+    for folder_name in os.listdir(root_dir):
+        folder_path = os.path.join(root_dir, folder_name)
+        
+        # Check if the path is a directory
+        if os.path.isdir(folder_path):
+            st.header(folder_name.capitalize())  # Display the folder name as the title
+            
+            # Loop through each image file in the folder
+            for image_file in os.listdir(folder_path):
+                if image_file.endswith((".png", ".jpg", ".jpeg", ".gif")):  # Check for image file formats
+                    image_path = os.path.join(folder_path, image_file)
+                    
+                    # Open and display the image
+                    image = Image.open(image_path)
+                    st.image(image, caption=image_file, use_container_width=True)   
+    
+    st.header("Segmentation Sample Results on Davis 2016")
+
+    # Root directory where the folders are located
+    root_dir = "log/davis-2016"  # Replace with the path to the root directory
+
+    # Loop through each folder in the root directory
+    for folder_name in os.listdir(root_dir):
+        folder_path = os.path.join(root_dir, folder_name)
+        
+        # Check if the path is a directory
+        if os.path.isdir(folder_path):
+            st.header(folder_name.capitalize())  # Display the folder name as the title
+            
+            # Counter to track the number of images displayed
+            image_count = 0
+            
+            # Loop through each image file in the folder
+            for image_file in os.listdir(folder_path):
+                if image_file.endswith((".png", ".jpg", ".jpeg", ".gif")):  # Check for image file formats
+                    image_path = os.path.join(folder_path, image_file)
+                    
+                    # Open and display the image
+                    image = Image.open(image_path)
+                    st.image(image, caption=image_file, use_container_width=True)
+                    
+                    # Increment the counter and break after displaying two images
+                    image_count += 1
+                    if image_count == 2:
+                        break  # Stop after displaying 2 images in the folder
+    
 
 elif selected == "🛠️ Try It Out":
     st.title("Try Guided Slot Attention on Your Video")
