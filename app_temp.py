@@ -8,7 +8,6 @@ import numpy as np
 import cv2
 import torchvision.transforms as transforms
 import config as config
-from PIL import Image
 
 import torch
 from model.model_for_pretrain import GSANet
@@ -41,7 +40,6 @@ with st.sidebar:
             "nav-link-selected": {"background-color": "#02ab21"},
         },
     )
-
 
 def visual_from_streamlit(device, model, images):
     model = model.to(device)
@@ -77,8 +75,7 @@ def visual_from_streamlit(device, model, images):
             # Concatenate original and prediction for comparison
             result = cv2.hconcat([ori_image, res_img])
             results.append(result)
-    
-    return results
+
 
 # Page Content Based on Sidebar Selection
 if selected == "📹 Introduction":
@@ -197,7 +194,7 @@ elif selected == "🛠️ Try It Out":
         
         # Display each result image
         for result in results:
-            st.image(result, caption="RGB Converted and Predicted Images", use_container_width=True)
+            st.image(result, caption="Original and Predicted", use_column_width=True)
 
     video_file = st.file_uploader("Upload a video", type=["mp4", "mov", "avi"])
     frame_rate = st.slider("Select Frame Rate for Segmentation", min_value=1, max_value=30, value=10)
