@@ -3,6 +3,13 @@ import logging
 from streamlit_option_menu import option_menu
 from PIL import Image
 import os
+import os
+import numpy as np
+import cv2
+
+import torch
+from model.model_for_pretrain import GSANet
+
 
 # Configure Streamlit page
 st.set_page_config(
@@ -31,6 +38,48 @@ with st.sidebar:
             "nav-link-selected": {"background-color": "#02ab21"},
         },
     )
+    
+def visual(image, image_name):
+    work_dir = "log/2024-11-14 12:52:12-davis-2017"
+    model = GSANet()
+    model = model.cpu()  # Ensure the model is on CPU
+    model = torch.nn.DataParallel(model)
+
+    model_dir = os.path.join(work_dir, "model")
+
+    checkpoint = torch.load(model_dir + "/best_model.pth", map_location=torch.device('cpu'), weights_only=True)
+    model.load_state_dict(checkpoint['model_state_dict'])
+
+    # Preprocess the uploaded image
+    image = image.convert("RGB")  # Ensure it's in RGB format
+    image = np.array(image)
+    image = torch.from_numpy(image).float().permute(2, 0, 1).unsqueeze(0)  # Convert to (1, C, H, W) tensor
+    image = image / 255.0  # Normalize to [0, 1]
+
+    model.eval()
+    with torch.no_grad():
+        # Perform inference on CPU
+        pred, _ = model(image)
+        res = pred[0]
+
+        # Process the prediction result
+        res_slice = res[0, :, :, :].unsqueeze(0).cpu().detach().squeeze().numpy()
+        res_slice = (res_slice - res_slice.min()) / (res_slice.max() - res_slice.min() + 1e-8)
+
+        # Convert the result to a format suitable for display
+        cat_res = cv2.cvtColor(np.array(res_slice * 255, dtype=np.uint8), cv2.COLOR_GRAY2BGR)
+        cat_ori = cv2.cvtColor(np.array(image[0].permute(1, 2, 0) * 255, dtype=np.uint8), cv2.COLOR_RGB2BGR)
+
+        # Concatenate the original and prediction images
+        result = cv2.hconcat([cat_ori, cat_res])
+
+        # Save the result
+        result_dir = os.path.join(work_dir, "result")
+        if not os.path.exists(result_dir):
+            os.makedirs(result_dir)
+
+        cv2.imwrite(os.path.join(result_dir, image_name), result)
+        st.image(result, caption=f"Result for {image_name}", use_container_width=True)  # Display result in Streamlit
 
 # Page Content Based on Sidebar Selection
 if selected == "📹 Introduction":
@@ -127,8 +176,21 @@ if selected == "📹 Introduction":
     
 
 elif selected == "🛠️ Try It Out":
-    st.title("Try Guided Slot Attention on Your Video")
-    st.write("Upload a video and adjust parameters to observe object segmentation.")
+    st.title("Try Guided Slot Attention on Your Image/Video")
+    st.write("Upload a image/video and adjust parameters to observe object segmentation.")
+    
+    # File uploader for images
+    uploaded_images = st.file_uploader("Upload images for segmention", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
+    if uploaded_images:
+        # uploaded_images a message while processing
+        st.write("Processing your image...")
+        for uploaded_image in uploaded_images:
+            image = Image.open(uploaded_image)
+            st.image(image, caption=uploaded_image.name, use_container_width=True)
+            
+            # Call the visual function with the image
+            visual(image, uploaded_image.name)  # Pass the image and its name to the function
+
     video_file = st.file_uploader("Upload a video", type=["mp4", "mov", "avi"])
     frame_rate = st.slider("Select Frame Rate for Segmentation", min_value=1, max_value=30, value=10)
     if video_file:
@@ -166,3 +228,4 @@ st.sidebar.write("""
 st.sidebar.write("⭐ [Star on GitHub](https://github.com/tan-nt/slot-attention-video-segmenter-app)")
 st.sidebar.write("---")
 st.sidebar.write("Developed by Your Name | Contact: [your.email@example.com](mailto:your.email@example.com)")
+

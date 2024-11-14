@@ -3,3 +3,5 @@ streamlit
 numba
 numpy
 streamlit-option-menu
+torch
+torchvision
