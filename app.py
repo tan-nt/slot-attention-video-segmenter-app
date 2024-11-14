@@ -38,12 +38,11 @@ with st.sidebar:
             "nav-link-selected": {"background-color": "#02ab21"},
         },
     )
-    
 
 def visual(image, image_name, work_dir="log/2024-11-14 12:52:12-davis-2017"):
     # Set the device (use GPU if available)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    st.write(f"Using device: {device}")
 
     # Load the model
     model = GSANet().to(device)
@@ -51,42 +50,59 @@ def visual(image, image_name, work_dir="log/2024-11-14 12:52:12-davis-2017"):
 
     # Load checkpoint
     model_dir = os.path.join(work_dir, "model")
-    # checkpoint = torch.load(model_dir + "/best_model.pth", map_location=device)
-    checkpoint = torch.load(model_dir + "/best_model.pth", map_location=device, weights_only=True)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    checkpoint_path = os.path.join(model_dir, "best_model.pth")
+    
+    # Check if checkpoint file exists
+    if not os.path.exists(checkpoint_path):
+        st.error(f"Checkpoint file not found: {checkpoint_path}")
+        return
+
+    try:
+        checkpoint = torch.load(checkpoint_path, map_location=device)
+        model.load_state_dict(checkpoint['model_state_dict'])
+    except Exception as e:
+        st.error(f"Error loading model checkpoint: {e}")
+        return
 
     # Preprocess the uploaded image for the model
-    image = image.convert("RGB")  # Ensure the image is in RGB format
-    image = np.array(image)
-    image = torch.from_numpy(image).float().permute(2, 0, 1).unsqueeze(0)  # Convert to (1, C, H, W) tensor
-    image = image / 255.0  # Normalize to [0, 1]
-    image = image.to(device)
+    try:
+        image = image.convert("RGB")  # Ensure the image is in RGB format
+        image = np.array(image)
+        image = torch.from_numpy(image).float().permute(2, 0, 1).unsqueeze(0)  # Convert to (1, C, H, W) tensor
+        image = image / 255.0  # Normalize to [0, 1]
+        image = image.to(device)
+    except Exception as e:
+        st.error(f"Error preprocessing image: {e}")
+        return
 
-    # Inference
+    # Model Inference
     model.eval()
     with torch.no_grad():
-        pred, _ = model(image)
-        res = pred[0]
+        try:
+            pred, _ = model(image)
+            res = pred[0]
 
-        # Process the output
-        res_slice = res[0, :, :, :].unsqueeze(0).cpu().detach().squeeze().numpy()
-        res_slice = (res_slice - res_slice.min()) / (res_slice.max() - res_slice.min() + 1e-8)
+            # Process the output
+            res_slice = res[0, :, :, :].unsqueeze(0).cpu().detach().squeeze().numpy()
+            res_slice = (res_slice - res_slice.min()) / (res_slice.max() - res_slice.min() + 1e-8)
 
-        # Prepare the images for display
-        cat_res = cv2.cvtColor((res_slice * 255).astype(np.uint8), cv2.COLOR_GRAY2BGR)
-        cat_ori = cv2.cvtColor(np.array(image[0].cpu().permute(1, 2, 0) * 255, dtype=np.uint8), cv2.COLOR_RGB2BGR)
+            # Prepare the images for display
+            cat_res = cv2.cvtColor((res_slice * 255).astype(np.uint8), cv2.COLOR_GRAY2BGR)
+            cat_ori = cv2.cvtColor(np.array(image[0].cpu().permute(1, 2, 0) * 255, dtype=np.uint8), cv2.COLOR_RGB2BGR)
 
-        # Concatenate and save the result
-        result = cv2.hconcat([cat_ori, cat_res])
-        result_dir = os.path.join(work_dir, "result")
-        if not os.path.exists(result_dir):
-            os.makedirs(result_dir)
+            # Concatenate and save the result
+            result = cv2.hconcat([cat_ori, cat_res])
+            result_dir = os.path.join(work_dir, "result")
+            if not os.path.exists(result_dir):
+                os.makedirs(result_dir)
 
-        result_path = os.path.join(result_dir, image_name)
-        cv2.imwrite(result_path, result)
+            result_path = os.path.join(result_dir, image_name)
+            cv2.imwrite(result_path, result)
 
-        # Display result in Streamlit
-        st.image(result, caption=f"Segmentation Result for {image_name}", use_container_width=True)
+            # Display result in Streamlit
+            st.image(result, caption=f"Segmentation Result for {image_name}", use_container_width=True)
+        except Exception as e:
+            st.error(f"Error during model inference or image processing: {e}")
 
 # Page Content Based on Sidebar Selection
 if selected == "📹 Introduction":
