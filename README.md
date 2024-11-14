@@ -1,77 +1,141 @@
-## Slot Attention for Video (SAVi and SAVi++)
+<div align="center">
 
-This repository contains the streamlit application of "Guided Slot Attention for Unsupervised Video Object Segmentation"
+<h3> Guided Slot Attention for Unsupervised Video Object Segmentation
+ </h3> 
+ <br/>
+  <a href='https://arxiv.org/abs/2303.08314'><img src='https://img.shields.io/badge/ArXiv-2303.08314-red' /></a> 
+</div>
 
-<img src="savi.gif" alt="SAVi animation" width="400"/>
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/guided-slot-attention-for-unsupervised-video/unsupervised-video-object-segmentation-on-10)](https://paperswithcode.com/sota/unsupervised-video-object-segmentation-on-10?p=guided-slot-attention-for-unsupervised-video)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/guided-slot-attention-for-unsupervised-video/unsupervised-video-object-segmentation-on-11)](https://paperswithcode.com/sota/unsupervised-video-object-segmentation-on-11?p=guided-slot-attention-for-unsupervised-video)
 
-## Instructions
-> ℹ️ The following instructions assume that you are using JAX on GPUs and have CUDA and CuDNN installed. For more details on how to use JAX with accelerators, including requirements and TPUs, please read the [JAX installation instructions](https://github.com/google/jax#installation).
+## What do we offer?
+### Guided Slot Attention for Unsupervised Video Object Segmentation
 
-Get dependencies and run model training via
-```sh
-./run.sh
+This project presents an implementation of Guided Slot Attention for Unsupervised Video Object Segmentation, with an emphasis on the DAVIS 2017 dataset. The project offers an interactive Google Colab notebook for training and experimentation, along with a Streamlit app for visualizations and practical applications.
+
+### Google Colab Notebook
+- **Train and Experiment on DAVIS 2017 Dataset**: The Colab notebook allows you to train and experiment with Guided Slot Attention on the DAVIS 2017 dataset, which you can find more information about [here](https://davischallenge.org/davis2017/code.html).
+- **Access the Notebook**: [Open the Colab notebook](https://colab.research.google.com/drive/1-9mWsiESYqvbxr5v1behDRkN1h3mBFEV) to get started.
+- **Sample Results**: Below are sample frames generated from the model's segmentation on the DAVIS 2017 dataset.
+
+<p align="center">
+    <img width="70%" alt="Segmentation Result 1" src="./assets/colab_run/davis-2017-result-1.png">
+</p>
+<p align="center">
+    <img width="70%" alt="Segmentation Result 2" src="./assets/colab_run/davis-2017-result-2.png">
+</p>
+
+### Streamlit App
+- **Interactive Visualization**: The Streamlit app enables users to visualize segmentation results interactively, providing an intuitive way to explore the model's performance on video sequences.
+
+### Real-Life Applications
+The approach discussed in this project has several promising real-life applications, such as:
+- **Autonomous Driving**: Enhancing object detection in dynamic environments.
+- **Surveillance Systems**: Improving object tracking and event detection for security monitoring.
+- **Medical Imaging**: Assisting in tracking moving elements, such as cells or anatomical structures, across medical video sequences.
+
+## Abstract
+Unsupervised video object segmentation aims to segment the most prominent object in a video sequence. However, the existence of complex backgrounds and multiple foreground objects make this task challenging. To address this issue, we propose a guided slot attention network to reinforce spatial structural information and obtain better foreground--background separation. The foreground and background slots, which are initialized with query guidance, are iteratively refined based on interactions with template information. Furthermore, to improve slot--template interaction and effectively fuse global and local features in the target and reference frames, K-nearest neighbors filtering and a feature aggregation transformer are introduced. The proposed model achieves state-of-the-art performance on two popular datasets. Additionally, we demonstrate the robustness of the proposed model in challenging scenes through various comparative experiments.
+
+## Overview
+<p align="center">
+  <img width="70%" alt="teaser" src="./assets/GSANet.gif">
+</p>
+
+
+## Requirements
+We use [fast_pytorch_kmeans](https://github.com/DeMoriarty/fast_pytorch_kmeans) for the GPU-accelerated Kmeans algorithm.
+```
+pip install fast-pytorch-kmeans
 ```
 
-Or use
-```sh
-pip3 install -r requirements.txt
-```
-to install dependencies and
-```sh
-python -m savi.main --config savi/configs/movi/savi_conditional_small.py --workdir tmp/
-```
-to train the smallest SAVi model (SAVi-S) on the [MOVi-A](https://github.com/google-research/kubric/blob/main/challenges/movi/README.md) dataset.
-
-or
-
-```sh
-python -m savi.main --config savi/configs/movi/savi++_conditional.py --workdir tmp/
-```
-to train the more capable SAVi++ model on the [MOVi-E](https://github.com/google-research/kubric/blob/main/challenges/movi/README.md) dataset.
-
-The MOVi datasets are stored in a [Google Cloud Storage (GCS) bucket](https://console.cloud.google.com/storage/browser/kubric-public/tfds)
-and can be downloaded to local disk prior to training for improved efficiency.
-
-To use a local copy of MOVi-A, for example, please copy the relevant folder to your local disk and set `data_dir` in the config file (e.g., `configs/movi/savi_conditional.py`) to point to it.  In more detail, first copy using commands such as
+## Datasets
+We use the [DUTS](http://saliencydetection.net/duts) train dataset for model pretraining and the [DAVIS 2016](https://davischallenge.org/davis2016/code.html) dataset for fintuning. For [DAVIS 2016](https://davischallenge.org/davis2016/code.html), [RAFT](https://github.com/princeton-vl/RAFT) is used to generate optical flow maps. The complete dataset directory structure is as follows:
 
 ```
-gsutil -m cp -r gs://kubric-public/tfds/movi_a/128x128/1.0.0 ./movi_a_128x128/
-mkdir movi_a
-mv movi_a_128x128/ movi_a/128x128/
+dataset dir/
+├── DUTS_train/
+│   ├── RGB/
+│   │   ├── sun_ekmqudbbrseiyiht.jpg
+│   │   ├── sun_ejwwsnjzahzakyjq.jpg
+│   │   └── ...
+│   └── GT/
+│       ├── sun_ekmqudbbrseiyiht.png
+│       ├── sun_ejwwsnjzahzakyjq.png
+│       └── ...
+├── DAVIS_train/
+│   ├── RGB/
+│   │   ├── bear_00000.jpg
+│   │   ├── bear_00001.jpg
+│   │   └── ...
+│   ├── GT/
+│   │   ├── bear_00000.png
+│   │   ├── bear_00001.png
+│   │   └── ...
+│   └── FLOW/
+│       ├── bear_00000.jpg
+│       ├── bear_00001.jpg
+│       └── ...
+└── DAVIS_test/
+    ├── blackswan/
+    │   ├── RGB/
+    │   │   ├── blackswan_00000.jpg
+    │   │   ├── blackswan_00001.jpg
+    │   │   └── ...
+    │   ├── GT/
+    │   │   ├── blackswan_00000.png
+    │   │   ├── blackswan_00001.png
+    │   │   └── ...
+    │   └── FLOW/
+    │       ├── blackswan_00000.jpg
+    │       ├── blackswan_00001.jpg
+    │       └── ...
+    ├── bmx-trees
+    └── ...
 ```
 
-The resulting directory structure will be as follows:
-<pre>
-.
-|-- movi_a
-|   `-- 128x128
-|       `-- 1.0.0
-|-- savi
-|   |-- configs
-|   |   `-- movi
-|   |-- lib
-|   |-- modules
-</pre>
+## Training Model
+We use a two-stage learning strategy: pretraining and finetuning.
 
-In order to use the local copy simply set `data_dir = "./"` in the config file `configs/movi/savi_conditional_small.py`. You can also copy it into a different location and set the `data_dir` accordingly.
+### Pretraining
+1. Edit config.py. The data root path option and GPU index should be modified.
+2. training
+```
+python pretrain.py
+```
 
-To run SAVi or SAVi++ on other MOVi dataset variants, follow the instructions above while replacing `movi_a` with, e.g. `movi_b` or `movi_c`.
+### Finetuning
+1. Edit config.py. The best model path generated during the pretraining process is required.
+2. training
+```
+python train.py
+```
 
-## Expected results
+## Evaluation
+TBD
 
-This repository contains the SAVi model configurations from our [ICLR 2022 paper](https://arxiv.org/abs/2111.12594). We here refer to these models as SAVi-S, SAVi-M, and SAVi-L. SAVi-S is trained and evaluated on downscaled 64x64 frames, whereas SAVi-M uses 128x128 frames and a larger CNN backbone. SAVi-L is similar to SAVi-M except that it uses larger ResNet34 encoder and slot embedding.
+## Result
+An example of the resulting image is shown below.
+<img align="center" src="./assets/result.png"/>
 
-This repository contains also the SAVi++ model configurations from our [NeurIPS 2022 paper](https://arxiv.org/abs/2206.07764). SAVi++ uses a more powerful encoder than SAVi-L that adds transformer blocks to the ResNet34. SAVi++ also adds data augmentation and training on depth targets. SAVi++ is able to better handle real world videos with more complexities such as camera movements and complex object shapes and textures.
+* A : RGB image
+* B : Optical Flow map
+* C : Pred map
+* D : GT
+* E : Pred forground RGB slot attention map
+* F : Pred background RGB slot attention map
+* G : Pred forground Flow slot attention map
+* H : Pred background Flow slot attention map
 
-The released MOVi datasets as part of [Kubric](https://github.com/google-research/kubric/) differ slightly from the ones used in our [ICLR 2022 paper](https://arxiv.org/abs/2111.12594) and are of slightly higher complexity (e.g., more variation in backgrounds), results are therefore not directly comparable. MOVi-A is approximately comparable to the "MOVi" dataset used in our [ICLR 2022 paper](https://arxiv.org/abs/2111.12594), whereas MOVi-C is approximately comparable to "MOVi++". We provide updated results for our released configs and the MOVi datasets with version `1.0.0` below.
-
-| Model      | MOVi-A      | MOVi-B      | MOVi-C     | MOVi-D     | MOVi-E    |
-|------------|-------------|-------------|------------|------------|-----------|
-| **SAVi-S** | 92.1 ± 0.1  | 72.2 ± 0.5  | 64.7 ± 0.3 | 33.8 ± 7.7 | 8.3 ± 0.9 |
-| **SAVi-M** | 93.4 ± 1.0  | 75.1 ± 0.5  | 67.4 ± 0.5 | 20.8 ± 2.2 | 12.2 ± 1.1|
-| **SAVi-L** | 95.1 ± 0.6  | 64.8 ± 8.9  | 71.3 ± 1.6 | 59.7 ± 6.0 | 34.1 ± 1.2|
-| **SAVi++** | 85.3 ± 9.8  | 72.5 ± 11.2 | 79.1 ± 2.1 | 84.8 ± 1.4 | 85.1 ± 0.9|
-
-
-All results are in terms of **FG-ARI** (in %) on validation splits. Mean ± standard error over 5 seeds. All SAVi and SAVi++ models reported above use bounding boxes of the first video frame as conditioning signal. For simplicity, we evaluate FG-ARI on all frames of the video (incl. the first frame), which differs from the setup described in our ICLR 2022 paper.
-
+## Citation
+```
+@InProceedings{Lee_2024_CVPR,
+    author    = {Lee, Minhyeok and Cho, Suhwan and Lee, Dogyoon and Park, Chaewon and Lee, Jungho and Lee, Sangyoun},
+    title     = {Guided Slot Attention for Unsupervised Video Object Segmentation},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2024},
+    pages     = {3807-3816}
+}
+```
