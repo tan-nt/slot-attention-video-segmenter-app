@@ -193,8 +193,8 @@ class SalObjDataset_test(data.Dataset):
             new_images = [image_root + f for f in os.listdir(image_root) if f.endswith('.jpg')]
             new_gts = [gt_root + f for f in os.listdir(gt_root) if f.endswith('.jpg') or f.endswith('.png')]
 
-            max_image_len = max(len(new_images), len(new_gts))
-            for i in range(max_image_len):
+            min_image_len = min(len(new_images), len(new_gts))
+            for i in range(min_image_len):
                 self.images.append(new_images[i])
                 self.gts.append(new_gts[i])
         
