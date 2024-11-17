@@ -28,7 +28,7 @@ This project presents an implementation of Guided Slot Attention for Unsupervise
 
 ### Streamlit App for Image and Video Segmentation
 
-Welcome to our interactive **Image and Video Segmentation** app, built with Streamlit. This application leverages Guided Slot Attention for background removal, image segmentation, and video segmentation, offering an intuitive, user-friendly interface to explore advanced segmentation techniques.
+Welcome to our interactive **Image and Video Segmentation** app, built with Streamlit. This application leverages Guided Slot Attention for background removal, image segmentation, and video segmentation, offering an intuitive, user-friendly interface to explore advanced segmentation techniques. You can access the app via [Go to the streamlit app](https://slot-attention-video-segmenter-app.streamlit.app/) to play with cool features.
 
 #### 🚀 Features
 
